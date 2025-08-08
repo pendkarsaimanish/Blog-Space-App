@@ -9,6 +9,7 @@ import {
     RefreshControl,
     SafeAreaView,
     StatusBar,
+    useColorScheme,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS, FONT_SIZES, SPACING } from '../constants/theme';
@@ -44,23 +45,18 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                 [Query.orderDesc('$createdAt'), Query.limit(20)]
             );
 
+
             const formattedPosts: BlogPost[] = response.documents.map((doc: any) => ({
                 $id: doc.$id,
                 title: doc.title,
-                content: doc.content,
-                author: {
-                    $id: doc.author.$id,
-                    email: doc.author.email,
-                    name: doc.author.name,
-                    bio: doc.author.bio,
-                    avatar: doc.author.avatar,
-                    createdAt: doc.author.$createdAt,
-                },
+                body: doc.body,
+                authorId: doc.authorId,
+                authorName: doc.authorName,
                 tags: doc.tags || [],
-                createdAt: doc.$createdAt,
-                updatedAt: doc.$updatedAt,
+                createdAt: doc.createdAt,
+                updatedAt: doc.updatedAt,
                 readTime: doc.readTime,
-            }));
+            } as BlogPost));
 
             setPosts(formattedPosts);
         } catch (error) {
@@ -79,7 +75,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     const filteredPosts = posts.filter(
         (post) =>
             post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            post.body.toLowerCase().includes(searchQuery.toLowerCase()) ||
             post.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase()))
     );
 
@@ -100,22 +96,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-                    <View style={styles.logoContainer}>
-                        <View style={styles.logo}>
-                            <Text style={styles.logoText}>B</Text>
-                        </View>
-                        <Text style={styles.logoTitle}>BlogSpace</Text>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.themeToggle}
-                        onPress={toggleTheme}
-                    >
-                        <Ionicons
-                            name={isDarkMode ? "sunny-outline" : "moon-outline"}
-                            size={24}
-                            color={COLORS.textPrimary}
-                        />
-                    </TouchableOpacity>
+                    {/* Removed logo and 'Latest Posts' text */}
                 </View>
 
                 {/* Hero Section */}
@@ -194,11 +175,16 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
+        justifyContent: 'center',
         alignItems: 'center',
         paddingHorizontal: SPACING.base,
         paddingTop: SPACING.lg,
         paddingBottom: SPACING.base,
+    },
+    headerTitle: {
+        fontSize: FONT_SIZES.xl,
+        fontWeight: '700',
+        color: COLORS.textPrimary,
     },
     logoContainer: {
         flexDirection: 'row',

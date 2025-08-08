@@ -49,13 +49,7 @@ export const AboutScreen: React.FC<AboutScreenProps> = ({ navigation }) => {
             >
                 {/* Header */}
                 <View style={styles.header}>
-
-                    <View style={styles.logoContainer}>
-                        <View style={styles.logo}>
-                            <Text style={styles.logoText}>B</Text>
-                        </View>
-                        <Text style={styles.logoTitle}>BlogSpace</Text>
-                    </View>
+                    {/* Logo removed */}
                 </View>
 
                 {/* About Section */}

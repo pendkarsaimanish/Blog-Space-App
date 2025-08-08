@@ -1,4 +1,4 @@
-import { Client, Account, Databases, Storage } from 'appwrite';
+import { Client, Account, Databases } from 'appwrite';
 
 const p = process.env;
 
@@ -8,7 +8,6 @@ const client = new Client()
 
 export const account = new Account(client);
 export const databases = new Databases(client);
-export const storage = new Storage(client);
 
 // Database and collection IDs
 export const DATABASE_ID = p.EXPO_PUBLIC_APPWRITE_DATABASE;
@@ -23,6 +22,5 @@ export const appwriteConfig = {
   projectId: p.EXPO_PUBLIC_APPWRITE_PROJECT,
   databaseId: DATABASE_ID,
   postsCollectionId: POSTS_COLLECTION_ID,
-  usersCollectionId: USERS_COLLECTION_ID,
-  bucketId: BUCKET_ID,
+  usersCollectionId: USERS_COLLECTION_ID
 };

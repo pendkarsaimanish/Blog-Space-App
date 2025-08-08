@@ -25,7 +25,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: user?.name || '',
-        bio: user?.bio || '',
+        bio: user?.prefs?.bio || '',
         email: user?.email || '',
     });
 
@@ -59,7 +59,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     const handleCancel = () => {
         setFormData({
             name: user?.name || '',
-            bio: user?.bio || '',
+            bio: user?.prefs?.bio || '',
             email: user?.email || '',
         });
         setIsEditing(false);
@@ -139,8 +139,8 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 <View style={styles.profileCard}>
                     <View style={styles.profileHeader}>
                         <View style={styles.avatarContainer}>
-                            {user?.avatar ? (
-                                <Image source={{ uri: user.avatar }} style={styles.avatar} />
+                            {user?.prefs?.avatar ? (
+                                <Image source={{ uri: user?.prefs?.avatar }} style={styles.avatar} />
                             ) : (
                                 <View style={styles.avatarPlaceholder}>
                                     <Text style={styles.avatarText}>
@@ -187,7 +187,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                             <View style={styles.infoItem}>
                                 <Text style={styles.infoLabel}>Joined</Text>
                                 <Text style={styles.infoValue}>
-                                    {formatDate(user?.createdAt || '')}
+                                    {formatDate(user?.$createdAt || '')}
                                 </Text>
                             </View>
                         </View>

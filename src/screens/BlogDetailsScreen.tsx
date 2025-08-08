@@ -10,6 +10,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { BlogPost } from '../types';
+import { useAuth } from '../contexts/AuthContext';
 
 interface BlogDetailsScreenProps {
     navigation: any;
@@ -25,6 +26,7 @@ export const BlogDetailsScreen: React.FC<BlogDetailsScreenProps> = ({
     route,
 }) => {
     const { post } = route.params;
+    const { user } = useAuth()
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString);
@@ -47,17 +49,6 @@ export const BlogDetailsScreen: React.FC<BlogDetailsScreenProps> = ({
                 style={styles.scrollView}
                 showsVerticalScrollIndicator={false}
             >
-                {/* Header */}
-                <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => navigation.goBack()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
-                        <Text style={styles.backText}>Back</Text>
-                    </TouchableOpacity>
-                </View>
-
                 {/* Blog Post Content */}
                 <View style={styles.contentContainer}>
                     <Text style={styles.title}>{post.title}</Text>
@@ -65,35 +56,35 @@ export const BlogDetailsScreen: React.FC<BlogDetailsScreenProps> = ({
                     {/* Author and Metadata */}
                     <View style={styles.metadataContainer}>
                         <View style={styles.authorSection}>
-                            {post.author.avatar ? (
-                                <Image source={{ uri: post.author.avatar }} style={styles.avatar} />
-                            ) : (
-                                <View style={styles.avatarPlaceholder}>
-                                    <Text style={styles.avatarText}>
-                                        {post.author.name.charAt(0).toUpperCase()}
-                                    </Text>
-                                </View>
-                            )}
+                            <View style={styles.avatarPlaceholder}>
+                                <Text style={styles.avatarText}>
+                                    {post.authorName.charAt(0).toUpperCase()}
+                                </Text>
+                            </View>
                             <View style={styles.authorInfo}>
-                                <Text style={styles.authorName}>{post.author.name}</Text>
+                                <Text style={styles.authorName}>{post.authorName}</Text>
                                 <Text style={styles.publishDate}>
                                     Published on {formatDate(post.createdAt)}
                                 </Text>
                             </View>
                         </View>
-
                         <View style={styles.readTimeContainer}>
                             <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
                             <Text style={styles.readTime}>
-                                {post.readTime || calculateReadTime(post.content)} min read
+                                {calculateReadTime(post.body)} min read
                             </Text>
                         </View>
                     </View>
 
-                    {/* Tags */}
+                    {/* Content */}
+                    <View style={styles.postContent}>
+                        <Text style={styles.contentText}>{post.body}</Text>
+                    </View>
+
+                    {/* Tags (moved here) */}
                     {post.tags && post.tags.length > 0 && (
                         <View style={styles.tagsContainer}>
-                            <Ionicons name="bookmark-outline" size={16} color={COLORS.textSecondary} />
+                            <Ionicons name="bookmark-outline" size={20} color={COLORS.textSecondary} />
                             <View style={styles.tagsList}>
                                 {post.tags.map((tag, index) => (
                                     <View key={index} style={styles.tag}>
@@ -104,35 +95,19 @@ export const BlogDetailsScreen: React.FC<BlogDetailsScreenProps> = ({
                         </View>
                     )}
 
-                    {/* Content */}
-                    <View style={styles.postContent}>
-                        <Text style={styles.contentText}>{post.content}</Text>
-                    </View>
-
-                    {/* Author Section */}
-                    <View style={styles.authorCard}>
-                        <View style={styles.authorCardHeader}>
-                            {post.author.avatar ? (
-                                <Image source={{ uri: post.author.avatar }} style={styles.authorCardAvatar} />
-                            ) : (
-                                <View style={styles.authorCardAvatarPlaceholder}>
-                                    <Text style={styles.authorCardAvatarText}>
-                                        {post.author.name.charAt(0).toUpperCase()}
-                                    </Text>
-                                </View>
-                            )}
-                            <View style={styles.authorCardInfo}>
-                                <Text style={styles.authorCardName}>{post.author.name}</Text>
-                                <Text style={styles.authorCardBio}>
-                                    {post.author.bio || 'No bio available'}
-                                </Text>
-                            </View>
+                    {/* Optimized Author Card */}
+                    <View style={styles.authorCardOptimized}>
+                        <View style={styles.avatarPlaceholder}>
+                            <Text style={styles.avatarText}>
+                                {post.authorName.charAt(0).toUpperCase() || 'U'}
+                            </Text>
                         </View>
+
+                        <Text style={styles.authorCardName}>{post.authorName}</Text>
                         <TouchableOpacity
-                            style={styles.morePostsButton}
+                            style={styles.morePostsButtonOptimized}
                             onPress={() => {
-                                // Navigate to user's profile or posts
-                                navigation.navigate('PublicProfile', { userId: post.author.$id });
+                                navigation.navigate('PublicProfile', { userId: post.authorId });
                             }}
                         >
                             <Text style={styles.morePostsButtonText}>More Posts</Text>
@@ -141,7 +116,7 @@ export const BlogDetailsScreen: React.FC<BlogDetailsScreenProps> = ({
 
                     {/* Related Posts Section */}
                     <View style={styles.relatedSection}>
-                        <Text style={styles.relatedTitle}>More from {post.author.name}</Text>
+                        <Text style={styles.relatedTitle}>More from {post.authorName}</Text>
                         {/* TODO: Implement related posts functionality */}
                         <View style={styles.relatedPlaceholder}>
                             <Ionicons name="document-outline" size={32} color={COLORS.textSecondary} />
@@ -257,16 +232,16 @@ const styles = StyleSheet.create({
     },
     tag: {
         backgroundColor: COLORS.primaryLight,
-        paddingHorizontal: SIZES.sm,
-        paddingVertical: SIZES.xs,
-        borderRadius: SIZES.full,
-        marginRight: SIZES.xs,
-        marginBottom: SIZES.xs,
+        paddingHorizontal: SIZES.lg,
+        paddingVertical: SIZES.sm,
+        borderRadius: SIZES.radiusFull,
+        marginRight: SIZES.sm,
+        marginBottom: SIZES.sm,
     },
     tagText: {
-        fontSize: SIZES.xs,
+        fontSize: SIZES.base,
         color: COLORS.primary,
-        fontWeight: '500',
+        fontWeight: '600',
     },
     postContent: {
         marginBottom: SIZES['2xl'],
@@ -352,4 +327,6 @@ const styles = StyleSheet.create({
         color: COLORS.textSecondary,
         marginTop: SIZES.base,
     },
+    authorCardOptimized: { flexDirection: 'row', alignItems: 'center', backgroundColor: COLORS.surface, borderRadius: SIZES.lg, padding: SIZES.base, marginBottom: SIZES['2xl'], ...SHADOWS.base },
+    morePostsButtonOptimized: { backgroundColor: COLORS.primary, paddingVertical: SIZES.sm, paddingHorizontal: SIZES.lg, borderRadius: SIZES.base, marginLeft: 'auto' },
 });

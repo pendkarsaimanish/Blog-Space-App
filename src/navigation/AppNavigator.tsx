@@ -34,16 +34,16 @@ export const AppNavigator: React.FC = () => {
         }}
       >
         <Stack.Screen name="MainDrawer" component={DrawerNavigator} />
-        <Stack.Screen 
-          name="BlogDetails" 
+        <Stack.Screen
+          name="BlogDetails"
           component={BlogDetailsScreen}
           options={{
             headerShown: true,
             title: 'Blog Post',
           }}
         />
-        <Stack.Screen 
-          name="PublicProfile" 
+        <Stack.Screen
+          name="PublicProfile"
           component={PublicProfileScreen}
           options={{
             headerShown: true,

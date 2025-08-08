@@ -11,8 +11,7 @@ import {
     SafeAreaView,
     StatusBar,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SIZES, SHADOWS, FONT_SIZES, SPACING } from '../constants/theme';
+import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAuth } from '../contexts/AuthContext';
@@ -69,12 +68,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
                 >
                     {/* Header */}
                     <View style={styles.header}>
-                        <View style={styles.logoContainer}>
-                            <View style={styles.logo}>
-                                <Text style={styles.logoText}>B</Text>
-                            </View>
-                            <Text style={styles.logoTitle}>BlogSpace</Text>
-                        </View>
+                        {/* Logo removed */}
                     </View>
 
                     {/* Register Form */}

@@ -1,25 +1,20 @@
-export interface User {
-  $id: string;
-  email: string;
-  name: string;
-  bio?: string;
-  avatar?: string;
-  createdAt: string;
-}
+import { Models } from "appwrite";
 
-export interface BlogPost {
-  $id: string;
+export interface User extends Models.User { }
+
+export interface BlogPost extends Models.Document {
   title: string;
-  content: string;
-  author: User;
-  tags: string[];
+  body: string;
+  tags: Array<string>;
+  authorId: string;
+  authorName: string;
   createdAt: string;
   updatedAt: string;
-  readTime?: number;
 }
 
 export interface AuthContextType {
   user: User | null;
+  setUser: React.Dispatch<React.SetStateAction<User | null>>;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;

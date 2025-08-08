@@ -3,6 +3,7 @@ import { account, databases, DATABASE_ID, USERS_COLLECTION_ID } from '../service
 import { ID, Query } from 'appwrite';
 import { User, AuthContextType } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createUser, getUser, loginUser } from '../utils/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -20,63 +21,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        checkAuthStatus();
+        checkAuthStatus()
     }, []);
 
     const checkAuthStatus = async () => {
         try {
-            const session = await account.get();
-            if (session) {
-                // Get user data from database
-                const userData = await databases.getDocument(
-                    DATABASE_ID,
-                    USERS_COLLECTION_ID,
-                    session.$id
-                );
-
-                const user: User = {
-                    $id: userData.$id,
-                    email: userData.email,
-                    name: userData.name,
-                    bio: userData.bio,
-                    avatar: userData.avatar,
-                    createdAt: userData.$createdAt,
-                };
-
+            const user = await getUser();
+            if (user) {
                 setUser(user);
-                setIsAuthenticated(true);
+                setIsAuthenticated(true)
+                setIsLoading(false)
             }
-        } catch (error) {
-            console.log('No active session');
+        } catch (err) {
+            console.log(err)
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
     };
 
     const login = async (email: string, password: string) => {
         try {
             setIsLoading(true);
-            const session = await account.createEmailPasswordSession(email, password);
-
-            // Get user data from database
-            const userData = await databases.getDocument(
-                DATABASE_ID,
-                USERS_COLLECTION_ID,
-                session.userId
-            );
-
-            const user: User = {
-                $id: userData.$id,
-                email: userData.email,
-                name: userData.name,
-                bio: userData.bio,
-                avatar: userData.avatar,
-                createdAt: userData.$createdAt,
-            };
-
-            setUser(user);
-            setIsAuthenticated(true);
-            await AsyncStorage.setItem('user', JSON.stringify(user));
+            const session = await loginUser(email, password);
+            if (session) {
+                const user = await getUser();
+                setUser(user)
+                setIsAuthenticated(true);
+            }
         } catch (error) {
             console.error('Login error:', error);
             throw error;
@@ -88,38 +59,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const register = async (email: string, password: string, name: string) => {
         try {
             setIsLoading(true);
-            const account = await account.create(
-                ID.unique(),
-                email,
-                password,
-                name
-            );
+            const newUser = await createUser(email, password, name)
 
-            // Create user document in database
-            const userData = await databases.createDocument(
-                DATABASE_ID,
-                USERS_COLLECTION_ID,
-                ID.unique(),
-                {
-                    email,
-                    name,
-                    bio: '',
-                    avatar: '',
+            if (newUser) {
+                const n = await loginUser(email, password)
+                if (n) {
+                    const user = await getUser()
+                    setUser(user);
+                    setIsAuthenticated(true);
                 }
-            );
+            }
 
-            const user: User = {
-                $id: userData.$id,
-                email: userData.email,
-                name: userData.name,
-                bio: userData.bio,
-                avatar: userData.avatar,
-                createdAt: userData.$createdAt,
-            };
-
-            setUser(user);
-            setIsAuthenticated(true);
-            await AsyncStorage.setItem('user', JSON.stringify(user));
         } catch (error) {
             console.error('Register error:', error);
             throw error;
@@ -133,7 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             await account.deleteSession('current');
             setUser(null);
             setIsAuthenticated(false);
-            await AsyncStorage.removeItem('user');
         } catch (error) {
             console.error('Logout error:', error);
         }
@@ -141,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const value: AuthContextType = {
         user,
+        setUser,
         isLoading,
         isAuthenticated,
         login,

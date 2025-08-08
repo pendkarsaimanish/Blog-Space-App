@@ -15,6 +15,8 @@ import { BlogCard } from '../components/BlogCard';
 import { BlogPost, User } from '../types';
 import { databases, DATABASE_ID, POSTS_COLLECTION_ID, USERS_COLLECTION_ID } from '../services/appwrite';
 import { Query } from 'appwrite';
+import { listBlogPosts } from '../services/database';
+import { getUser } from '../utils/auth';
 
 interface PublicProfileScreenProps {
   navigation: any;
@@ -38,44 +40,32 @@ export const PublicProfileScreen: React.FC<PublicProfileScreenProps> = ({
   const fetchUserData = async () => {
     try {
       setLoading(true);
-      
-      // Fetch user data
-      const userData = await databases.getDocument(
-        DATABASE_ID,
-        USERS_COLLECTION_ID,
-        userId
-      );
 
-      const user: User = {
-        $id: userData.$id,
-        email: userData.email,
-        name: userData.name,
-        bio: userData.bio,
-        avatar: userData.avatar,
-        createdAt: userData.$createdAt,
-      };
+      const user = await getUser()
+
+      // Fetch user data
+      // const userData = await databases.getDocument(
+      //   DATABASE_ID,
+      //   USERS_COLLECTION_ID,
+      //   userId
+      // );
+
+      // const user: User = {
+      //   $id: userData.$id,
+      //   email: userData.email,
+      //   name: userData.name,
+      //   bio: userData.bio,
+      //   avatar: userData.avatar,
+      //   createdAt: userData.$createdAt,
+      // };
 
       setUser(user);
 
-      // Fetch user's posts
-      const postsData = await databases.listDocuments(
-        DATABASE_ID,
-        POSTS_COLLECTION_ID,
-        [Query.equal('authorId', userId)]
-      );
-
-      const userPosts: BlogPost[] = postsData.documents.map((doc: any) => ({
-        $id: doc.$id,
-        title: doc.title,
-        content: doc.content,
-        author: user,
-        tags: doc.tags || [],
-        createdAt: doc.$createdAt,
-        updatedAt: doc.$updatedAt,
-        readTime: doc.readTime,
-      }));
-
-      setPosts(userPosts);
+      const response = (await listBlogPosts()).documents
+      if (response.length > 0 && user) {
+        const userBlog = response.filter(blog => blog.authorId === userId)
+        setPosts(userBlog);
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
       Alert.alert('Error', 'Failed to load user profile');
@@ -130,7 +120,7 @@ export const PublicProfileScreen: React.FC<PublicProfileScreenProps> = ({
         showsVerticalScrollIndicator={false}
       >
         {/* Header */}
-        <View style={styles.header}>
+        {/* <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -138,31 +128,31 @@ export const PublicProfileScreen: React.FC<PublicProfileScreenProps> = ({
             <Ionicons name="arrow-back" size={24} color={COLORS.textPrimary} />
             <Text style={styles.backText}>Back</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.profileHeader}>
-            {user.avatar ? (
-              <Image source={{ uri: user.avatar }} style={styles.avatar} />
+            {user.prefs?.avatar ? (
+              <Image source={{ uri: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150' }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {user.name.charAt(0).toUpperCase()}
+                  {posts[0].authorName.charAt(0).toUpperCase()}
                 </Text>
               </View>
             )}
             <View style={styles.profileInfo}>
-              <Text style={styles.userName}>{user.name}</Text>
+              <Text style={styles.userName}>{posts[0].authorName}</Text>
               <Text style={styles.joinDate}>
-                Joined {formatDate(user.createdAt)}
+                Joined {formatDate(user.$createdAt)}
               </Text>
             </View>
           </View>
 
-          {user.bio && (
+          {user.prefs?.bio && (
             <View style={styles.bioSection}>
-              <Text style={styles.bioText}>{user.bio}</Text>
+              <Text style={styles.bioText}>{user.prefs?.bio || "Bio.."}</Text>
             </View>
           )}
 
@@ -171,16 +161,6 @@ export const PublicProfileScreen: React.FC<PublicProfileScreenProps> = ({
               <Text style={styles.statNumber}>{posts.length}</Text>
               <Text style={styles.statLabel}>Posts</Text>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Followers</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statNumber}>0</Text>
-              <Text style={styles.statLabel}>Following</Text>
-            </View>
           </View>
         </View>
 
@@ -188,7 +168,7 @@ export const PublicProfileScreen: React.FC<PublicProfileScreenProps> = ({
         <View style={styles.postsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              {posts.length > 0 ? `${user.name}'s Posts` : 'No Posts Yet'}
+              {posts.length > 0 ? `${posts[0].authorName}'s Posts` : 'No Posts Yet'}
             </Text>
             <Text style={styles.postsCount}>
               {posts.length} {posts.length === 1 ? 'post' : 'posts'}
@@ -304,7 +284,7 @@ const styles = StyleSheet.create({
     marginBottom: SIZES.xs,
   },
   joinDate: {
-    fontSize: SIZES.sm,
+    fontSize: SIZES.base,
     color: COLORS.textSecondary,
   },
   bioSection: {
@@ -357,7 +337,7 @@ const styles = StyleSheet.create({
     color: COLORS.textPrimary,
   },
   postsCount: {
-    fontSize: SIZES.sm,
+    fontSize: SIZES.base,
     color: COLORS.textSecondary,
   },
   emptyContainer: {

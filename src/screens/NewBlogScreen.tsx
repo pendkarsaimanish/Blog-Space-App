@@ -14,8 +14,7 @@ import { COLORS, SIZES, SHADOWS } from '../constants/theme';
 import { Input } from '../components/Input';
 import { Button } from '../components/Button';
 import { useAuth } from '../contexts/AuthContext';
-import { databases, DATABASE_ID, POSTS_COLLECTION_ID } from '../services/appwrite';
-import { ID } from 'appwrite';
+import { createBlogPost } from '../services/database';
 
 interface NewBlogScreenProps {
     navigation: any;
@@ -24,38 +23,35 @@ interface NewBlogScreenProps {
 export const NewBlogScreen: React.FC<NewBlogScreenProps> = ({ navigation }) => {
     const { user } = useAuth();
     const [title, setTitle] = useState('');
-    const [content, setContent] = useState('');
+    const [body, setBody] = useState('');
     const [tags, setTags] = useState('');
     const [loading, setLoading] = useState(false);
 
     const handlePublish = async () => {
-        if (!title.trim() || !content.trim()) {
+        if (!title.trim() || !body.trim()) {
             Alert.alert('Error', 'Please fill in title and content');
             return;
         }
 
         try {
             setLoading(true);
+            const date = new Date(); // Or any other date object
+            const formatter = new Intl.DateTimeFormat('en-CA', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+            });
+            const formattedDate = formatter.format(date);
 
-            const tagArray = tags
-                .split(',')
-                .map((tag) => tag.trim())
-                .filter((tag) => tag.length > 0);
-
-            const postData = {
-                title: title.trim(),
-                content: content.trim(),
-                tags: tagArray,
-                author: user?.$id,
-                readTime: Math.ceil(content.split(' ').length / 200), // Calculate read time
-            };
-
-            await databases.createDocument(
-                DATABASE_ID,
-                POSTS_COLLECTION_ID,
-                ID.unique(),
-                postData
-            );
+            await createBlogPost(
+                title.trim(),
+                body.trim(),
+                tags.split(",").map(tag => tag.trim()),
+                user?.$id,
+                user?.name,
+                formattedDate,
+                ''
+            )
 
             Alert.alert('Success', 'Your blog post has been published!', [
                 {
@@ -63,6 +59,11 @@ export const NewBlogScreen: React.FC<NewBlogScreenProps> = ({ navigation }) => {
                     onPress: () => navigation.navigate('Dashboard'),
                 },
             ]);
+
+            setTitle('')
+            setBody('')
+            setTags('')
+
         } catch (error: any) {
             Alert.alert('Error', error.message || 'Failed to publish post');
         } finally {
@@ -117,8 +118,8 @@ export const NewBlogScreen: React.FC<NewBlogScreenProps> = ({ navigation }) => {
                     <Input
                         label="Content"
                         placeholder="Write your blog post content here..."
-                        value={content}
-                        onChangeText={setContent}
+                        value={body}
+                        onChangeText={setBody}
                         multiline
                         numberOfLines={10}
                         autoCapitalize="sentences"
@@ -144,7 +145,7 @@ export const NewBlogScreen: React.FC<NewBlogScreenProps> = ({ navigation }) => {
                     </View>
 
                     {/* Preview Section */}
-                    {title || content ? (
+                    {title ? (
                         <View style={styles.previewSection}>
                             <Text style={styles.previewTitle}>Preview</Text>
                             <View style={styles.previewCard}>
@@ -152,7 +153,7 @@ export const NewBlogScreen: React.FC<NewBlogScreenProps> = ({ navigation }) => {
                                     {title || 'Your title will appear here'}
                                 </Text>
                                 <Text style={styles.previewPostContent} numberOfLines={3}>
-                                    {content || 'Your content will appear here'}
+                                    {body || 'Your content will appear here'}
                                 </Text>
                                 {tags && (
                                     <View style={styles.previewTags}>
@@ -271,15 +272,15 @@ const styles = StyleSheet.create({
     },
     previewTag: {
         backgroundColor: COLORS.primaryLight,
-        paddingHorizontal: SIZES.sm,
-        paddingVertical: SIZES.xs,
-        borderRadius: SIZES.full,
-        marginRight: SIZES.xs,
-        marginBottom: SIZES.xs,
+        paddingHorizontal: SIZES.lg,
+        paddingVertical: SIZES.sm,
+        borderRadius: SIZES.radiusFull,
+        marginRight: SIZES.sm,
+        marginBottom: SIZES.sm,
     },
     previewTagText: {
-        fontSize: SIZES.xs,
+        fontSize: SIZES.base,
         color: COLORS.primary,
-        fontWeight: '500',
+        fontWeight: '600',
     },
 });

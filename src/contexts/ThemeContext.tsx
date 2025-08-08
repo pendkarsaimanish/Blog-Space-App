@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { ThemeContextType } from '../types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme } from 'react-native';
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
@@ -14,6 +15,9 @@ export const useTheme = () => {
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isDarkMode, setIsDarkMode] = useState(false);
+    const colorSchema = useColorScheme();
+
+
 
     useEffect(() => {
         loadThemePreference();

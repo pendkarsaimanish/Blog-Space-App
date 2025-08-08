@@ -1,8 +1,10 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { Ionicons } from '@expo/vector-icons';
+import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { COLORS, SPACING, FONT_SIZES } from '../constants/theme';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Import screens
 import { HomeScreen } from '../screens/HomeScreen';
@@ -27,6 +29,17 @@ const Drawer = createDrawerNavigator<DrawerParamList>();
 
 export const DrawerNavigator: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const { isDarkMode, toggleTheme } = useTheme();
+
+  const ThemeToggleButton = () => (
+    <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme}>
+      <Ionicons
+        name={isDarkMode ? "sunny-outline" : "moon-outline"}
+        size={24}
+        color={COLORS.textPrimary}
+      />
+    </TouchableOpacity>
+  );
 
   return (
     <Drawer.Navigator
@@ -41,6 +54,7 @@ export const DrawerNavigator: React.FC = () => {
           backgroundColor: COLORS.surface,
         },
         headerTintColor: COLORS.textPrimary,
+        headerRight: () => <ThemeToggleButton />,
       }}
     >
       <Drawer.Screen
@@ -50,16 +64,6 @@ export const DrawerNavigator: React.FC = () => {
           title: 'Home',
           drawerIcon: ({ focused, color, size }) => (
             <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
-          ),
-        }}
-      />
-      <Drawer.Screen
-        name="About"
-        component={AboutScreen}
-        options={{
-          title: 'About',
-          drawerIcon: ({ focused, color, size }) => (
-            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} size={size} color={color} />
           ),
         }}
       />
@@ -120,6 +124,23 @@ export const DrawerNavigator: React.FC = () => {
           />
         </>
       )}
+      <Drawer.Screen
+        name="About"
+        component={AboutScreen}
+        options={{
+          title: 'About',
+          drawerIcon: ({ focused, color, size }) => (
+            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} size={size} color={color} />
+          ),
+        }}
+      />
     </Drawer.Navigator>
   );
 };
+
+const styles = StyleSheet.create({
+  themeToggle: {
+    padding: SPACING.sm,
+    marginRight: SPACING.sm,
+  },
+});

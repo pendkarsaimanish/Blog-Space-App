@@ -40,23 +40,19 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                         {post.title}
                     </Text>
                     <Text style={styles.content} numberOfLines={3}>
-                        {post.content}
+                        {post.body}
                     </Text>
                 </View>
 
                 <View style={styles.footer}>
                     {showAuthor && (
                         <View style={styles.authorSection}>
-                            {post.author.avatar ? (
-                                <Image source={{ uri: post.author.avatar }} style={styles.avatar} />
-                            ) : (
-                                <View style={styles.avatarPlaceholder}>
-                                    <Text style={styles.avatarText}>
-                                        {post.author.name.charAt(0).toUpperCase()}
-                                    </Text>
-                                </View>
-                            )}
-                            <Text style={styles.authorName}>{post.author.name}</Text>
+                            <View style={styles.avatarPlaceholder}>
+                                <Text style={styles.avatarText}>
+                                    {post.authorName.charAt(0).toUpperCase()}
+                                </Text>
+                            </View>
+                            <Text style={styles.authorName}>{post.authorName}</Text>
                         </View>
                     )}
 
@@ -68,7 +64,7 @@ export const BlogCard: React.FC<BlogCardProps> = ({
                         <View style={styles.metadataItem}>
                             <Ionicons name="time-outline" size={16} color={COLORS.textSecondary} />
                             <Text style={styles.metadataText}>
-                                {post.readTime || calculateReadTime(post.content)} min read
+                                {calculateReadTime(post.body)} min read
                             </Text>
                         </View>
                     </View>
@@ -172,14 +168,14 @@ const styles = StyleSheet.create({
     },
     tag: {
         backgroundColor: COLORS.primaryLight,
-        paddingHorizontal: SPACING.sm,
-        paddingVertical: SPACING.xs,
+        paddingHorizontal: SIZES.lg,
+        paddingVertical: SIZES.sm,
         borderRadius: SIZES.radiusFull,
-        marginRight: SPACING.xs,
-        marginBottom: SPACING.xs,
+        marginRight: SIZES.sm,
+        marginBottom: SIZES.sm,
     },
     tagText: {
-        fontSize: FONT_SIZES.xs,
+        fontSize: SIZES.base,
         color: COLORS.primary,
         fontWeight: '500',
     },

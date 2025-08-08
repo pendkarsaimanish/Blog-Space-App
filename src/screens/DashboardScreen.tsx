@@ -13,8 +13,7 @@ import { BlogCard } from '../components/BlogCard';
 import { Button } from '../components/Button';
 import { BlogPost } from '../types';
 import { useAuth } from '../contexts/AuthContext';
-import { databases, DATABASE_ID, POSTS_COLLECTION_ID } from '../services/appwrite';
-import { Query } from 'appwrite';
+import { listBlogPosts } from '../services/database';
 
 interface DashboardScreenProps {
     navigation: any;
@@ -33,35 +32,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
     const fetchUserPosts = async () => {
         try {
             setLoading(true);
-            const response = await databases.listDocuments(
-                DATABASE_ID,
-                POSTS_COLLECTION_ID,
-                [
-                    Query.equal('author.$id', user?.$id || ''),
-                    Query.orderDesc('$createdAt'),
-                    Query.limit(10),
-                ]
-            );
+            const response = (await listBlogPosts()).documents
+            if (response.length > 0 && user) {
+                const userBlog = response.filter(blog => blog.authorId === user.$id)
+                setPosts(userBlog);
+            }
 
-            const formattedPosts: BlogPost[] = response.documents.map((doc: any) => ({
-                $id: doc.$id,
-                title: doc.title,
-                content: doc.content,
-                author: {
-                    $id: doc.author.$id,
-                    email: doc.author.email,
-                    name: doc.author.name,
-                    bio: doc.author.bio,
-                    avatar: doc.author.avatar,
-                    createdAt: doc.author.$createdAt,
-                },
-                tags: doc.tags || [],
-                createdAt: doc.$createdAt,
-                updatedAt: doc.$updatedAt,
-                readTime: doc.readTime,
-            }));
-
-            setPosts(formattedPosts);
         } catch (error) {
             console.error('Error fetching user posts:', error);
         } finally {
@@ -98,21 +74,12 @@ export const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) 
                 showsVerticalScrollIndicator={false}
             >
                 {/* Header */}
-                <View style={styles.header}>
-                    <View style={styles.logoContainer}>
-                        <View style={styles.logo}>
-                            <Text style={styles.logoText}>B</Text>
-                        </View>
-                        <Text style={styles.logoTitle}>BlogSpace</Text>
-                    </View>
-                    <TouchableOpacity
-                        style={styles.newPostButton}
-                        onPress={() => navigation.navigate('NewBlog')}
-                    >
+                {/* <View style={styles.header}>
+                    <View style={styles.newPostButton}>
                         <Ionicons name="add" size={20} color={COLORS.surface} />
                         <Text style={styles.newPostText}>New Post</Text>
-                    </TouchableOpacity>
-                </View>
+                    </View>
+                </View> */}
 
                 {/* Welcome Section */}
                 <View style={styles.welcomeSection}>
@@ -207,29 +174,6 @@ const styles = StyleSheet.create({
         paddingTop: SIZES.xl,
         paddingBottom: SIZES.base,
     },
-    logoContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    logo: {
-        width: 32,
-        height: 32,
-        backgroundColor: COLORS.primary,
-        borderRadius: SIZES.sm,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: SIZES.sm,
-    },
-    logoText: {
-        color: COLORS.surface,
-        fontSize: SIZES.lg,
-        fontWeight: '700',
-    },
-    logoTitle: {
-        fontSize: SIZES.xl,
-        fontWeight: '700',
-        color: COLORS.textPrimary,
-    },
     newPostButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -248,6 +192,7 @@ const styles = StyleSheet.create({
     welcomeSection: {
         paddingHorizontal: SIZES.base,
         paddingBottom: SIZES.lg,
+        paddingTop: SIZES.xl,
     },
     welcomeTitle: {
         fontSize: SIZES['2xl'],
@@ -272,9 +217,10 @@ const styles = StyleSheet.create({
         fontSize: SIZES['3xl'],
         fontWeight: '700',
         color: COLORS.primary,
+        paddingStart: 2
     },
     statsLabel: {
-        fontSize: SIZES.sm,
+        fontSize: SIZES.base,
         color: COLORS.textSecondary,
         marginTop: SIZES.xs,
     },
@@ -292,6 +238,7 @@ const styles = StyleSheet.create({
         fontSize: SIZES.xl,
         fontWeight: '700',
         color: COLORS.textPrimary,
+        marginBottom: 8
     },
     createNewText: {
         fontSize: SIZES.sm,
